@@ -51,14 +51,19 @@ namespace PersonalFont.Persona
             }
 
             // Variable Width Table (VWT)
-            reader.ReadUInt32();    // Size
+            int numGlyphInfo = reader.ReadInt32() / 2;    // Size
             font.Glyphs = new List<Glyph>(numGlyphs);
             for (int i = 0; i < numGlyphs; i++) {
                 var glyph = new Glyph();
                 glyph.Char = (char)i;   // There is no information about chars
-                glyph.BearingX = reader.ReadByte();
-                glyph.Advance = reader.ReadByte();
-                glyph.Width = glyph.Advance - glyph.BearingX;
+
+                // There may be not information for all the glyphs
+                if (i < numGlyphInfo) {
+                    glyph.BearingX = reader.ReadByte();
+                    glyph.Advance = reader.ReadByte();
+                    glyph.Width = glyph.Advance - glyph.BearingX;
+                }
+
                 font.Glyphs.Add(glyph);
             }
 
@@ -93,7 +98,8 @@ namespace PersonalFont.Persona
                 glyph.Image = new int[font.CharWidth, font.CharHeight];
                 for (int h = 0; h < font.CharHeight; h++)
                     for (int w = 0; w < font.CharWidth; w++)
-                        glyph.Image[w, h] = decompressed[position++];
+                        if (position < decompressed.Length)
+                            glyph.Image[w, h] = decompressed[position++];
                 font.Glyphs[i] = glyph;
             }
 
