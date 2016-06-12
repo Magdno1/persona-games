@@ -19,8 +19,9 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
-using Libgame.IO;
 using System.IO;
+using System.Diagnostics;
+using Libgame.IO;
 using PersonalFont.Fonts;
 
 namespace PersonalFont
@@ -29,11 +30,40 @@ namespace PersonalFont
     {
         public static void Main(string[] args)
         {
-            const string FontPath = @"/home/benito/Descargas/ACHMEDKILLSYOU/FONT0.FNT";
-            var stream = new DataStream(FontPath, FileMode.Open, FileAccess.Read);
+            Console.WriteLine("PersonalFont v.1.0 ~~ by pleonex ~~ Licensed under GPL3");
+            Console.WriteLine("Export and import font files for Persona games.");
+            Console.WriteLine("Source code at: https://github.com/pleonex/persona-games");
+            Console.WriteLine();
+
+            if (args.Length != 1) {
+                Console.WriteLine("USAGE: PersonalFont.exe FontPath");
+                return;
+            }
+
+            string fontPath = args[0];
+            if (!File.Exists(fontPath)) {
+                Console.WriteLine("ERROR: Font file does not exist");
+                return;
+            }
+
+            Stopwatch watch = Stopwatch.StartNew();
+
+            // Get the output paths
+            string baseDir = Path.GetDirectoryName(fontPath);
+            string fileName = Path.GetFileNameWithoutExtension(fontPath);
+            string imagePath = Path.Combine(baseDir, fileName + ".png");
+            //string infoPath = Path.Combine(baseDir, fileName + ".xml");
+
+            // Read font file
+            var stream = new DataStream(fontPath, FileMode.Open, FileAccess.Read);
             var reader = new DataReader(stream);
             var font = Format.ConvertTo<Font>(reader);
-            font.ExportMap("/home/benito/myfont.png");
+
+            // Export to image and XML
+            font.ExportMap(imagePath);
+
+            watch.Stop();
+            Console.WriteLine("Done in {0}", watch.Elapsed);
         }
     }
 }
