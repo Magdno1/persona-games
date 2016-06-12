@@ -55,7 +55,13 @@ There are 4 bytes per glyph to have the position of the glyphs in the encoded da
 ### Huffman Tree
 Offset | Size | Descripcion
 ------ | ---- | -----------
-0x00   | 0x02 | Number of entries
-0x02   | 0x02 | Number of nodes
-0x04   | 0x02 | Number of symbols
-0x06   | .... | Tree nodes
+0x00   | 0x02 | Number of nodes
+0x02   | .... | Tree nodes
+
+
+A Huffman tree node has 3 values of 16-bits (6 bytes in total).
+
+1. First value is the left-child index in the tree.
+2. Second value is the right-child index in the tree.
+3. Third value is the node index (they should be incremental).
+
