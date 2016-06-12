@@ -24,6 +24,7 @@ using System.Diagnostics;
 using Libgame.IO;
 using PersonalFont.Fonts;
 using System.Drawing;
+using System.Xml.Linq;
 
 namespace PersonalFont
 {
@@ -53,7 +54,7 @@ namespace PersonalFont
             string baseDir = Path.GetDirectoryName(fontPath);
             string fileName = Path.GetFileNameWithoutExtension(fontPath);
             string imagePath = Path.Combine(baseDir, fileName + ".png");
-            //string infoPath = Path.Combine(baseDir, fileName + ".xml");
+            string infoPath = Path.Combine(baseDir, fileName + ".xml");
 
             // Read font file
             var stream = new DataStream(fontPath, FileMode.Open, FileAccess.Read);
@@ -62,6 +63,7 @@ namespace PersonalFont
 
             // Export to image and XML
             font.ConvertTo<Image>().Save(imagePath);
+            font.ConvertTo<XDocument>().Save(infoPath);
 
             watch.Stop();
             Console.WriteLine("Done in {0}", watch.Elapsed);

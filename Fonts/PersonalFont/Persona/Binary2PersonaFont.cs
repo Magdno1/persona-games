@@ -55,6 +55,7 @@ namespace PersonalFont.Persona
             font.Glyphs = new List<Glyph>(numGlyphs);
             for (int i = 0; i < numGlyphs; i++) {
                 var glyph = new Glyph();
+                glyph.Char = (char)i;   // There is no information about chars
                 glyph.BearingX = reader.ReadByte();
                 glyph.Advance = reader.ReadByte();
                 glyph.Width = glyph.Advance - glyph.BearingX;
