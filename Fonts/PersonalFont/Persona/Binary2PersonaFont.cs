@@ -26,11 +26,12 @@ using PersonalFont.Fonts;
 namespace PersonalFont.Persona
 {
     public class Binary2PersonaFont :
-    IConverter<DataReader, Font>,
-        IConverter<Font, DataWriter>
+    IConverter<DataReader, GameFont>
     {
-        public void Convert(DataReader reader, Font font)
+        public GameFont Convert(DataReader reader)
         {
+            var font = new GameFont();
+
             // Main header
             reader.ReadUInt32();    // header size
             reader.ReadBytes(0xA);  // unknown
@@ -94,6 +95,8 @@ namespace PersonalFont.Persona
                         glyph.Image[w, h] = decompressed[position++];
                 font.Glyphs[i] = glyph;
             }
+
+            return font;
         }
 
         private static byte[] Decompress(byte[] tree, byte[] data)
@@ -132,11 +135,6 @@ namespace PersonalFont.Persona
             }
 
             return output.ToArray();
-        }
-
-        public void Convert(Font font, DataWriter writer)
-        {
-            throw new NotImplementedException();
         }
     }
 }

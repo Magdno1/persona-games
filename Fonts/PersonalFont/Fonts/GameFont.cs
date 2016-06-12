@@ -1,5 +1,5 @@
 ﻿//
-//  Glyph.cs
+//  Font.cs
 //
 //  Author:
 //       Benito Palacios Sánchez (aka pleonex) <benito356@gmail.com>
@@ -18,37 +18,16 @@
 //
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-using System.Drawing;
+using System.Collections.Generic;
 
 namespace PersonalFont.Fonts
 {
-    public struct Glyph
+    public class GameFont : Format
     {
-        public int[,] Image {
-            get;
-            set;
-        }
-
-        public int BearingX
-        {
-            get;
-            set;
-        }
-
-        public int Width {
-            get;
-            set;
-        }
-
-        public int Advance {
-            get;
-            set;
-        }
-
-        public char Char {
-            get;
-            set;
-        }
+        public int CharWidth { get; set; }
+        public int CharHeight { get; set; }
+        public List<Glyph> Glyphs { get; set; }
+        public Colour[] Palette { get; set; }
     }
 }
 

@@ -23,6 +23,7 @@ using System.IO;
 using System.Diagnostics;
 using Libgame.IO;
 using PersonalFont.Fonts;
+using System.Drawing;
 
 namespace PersonalFont
 {
@@ -57,10 +58,10 @@ namespace PersonalFont
             // Read font file
             var stream = new DataStream(fontPath, FileMode.Open, FileAccess.Read);
             var reader = new DataReader(stream);
-            var font = Format.ConvertTo<Font>(reader);
+            var font = Format.ConvertTo<GameFont>(reader);
 
             // Export to image and XML
-            font.ExportMap(imagePath);
+            font.ConvertTo<Image>().Save(imagePath);
 
             watch.Stop();
             Console.WriteLine("Done in {0}", watch.Elapsed);

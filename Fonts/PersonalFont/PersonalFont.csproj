@@ -47,8 +47,9 @@
     <Compile Include="IConverter.cs" />
     <Compile Include="Fonts\Glyph.cs" />
     <Compile Include="Fonts\Colour.cs" />
-    <Compile Include="Fonts\Font.cs" />
     <Compile Include="Persona\Binary2PersonaFont.cs" />
+    <Compile Include="Fonts\Font2Image.cs" />
+    <Compile Include="Fonts\GameFont.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

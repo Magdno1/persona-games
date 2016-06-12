@@ -26,38 +26,22 @@ namespace PersonalFont
 {
     public abstract class Format
     {
-
         public static dynamic ConvertFrom<TSrc>(TSrc source, Type dstType)
         {
-            var newFormat = Activator.CreateInstance(dstType);
-            ConvertFrom<TSrc>(source, dstType, newFormat);
-            return newFormat;
-        }
-
-        public static void ConvertFrom<TSrc>(TSrc source, Type dstType, dynamic destination)
-        {
-            Convert(typeof(TSrc), source, dstType, destination);
+            return Convert(typeof(TSrc), source, dstType);
         }
 
         public static TDst ConvertTo<TDst>(dynamic source)
-            where TDst : new()
         {
-            var newFormat = new TDst();
-            ConvertTo<TDst>(source.GetType(), source, newFormat);
-            return newFormat;
+            return Convert(source.GetType(), source, typeof(TDst));
         }
 
-        public static void ConvertTo<TDst>(Type srcType, dynamic source, TDst destination)
+        public static TDst Convert<TSrc, TDst>(TSrc source)
         {
-            Convert(srcType, source, typeof(TDst), destination);
+            return Convert(typeof(TSrc), source, typeof(TDst));
         }
 
-        public static void Convert<TSrc, TDst>(TSrc source, TDst destination)
-        {
-            Convert(typeof(TSrc), source, typeof(TDst), destination);
-        }
-
-        public static void Convert(Type srcType, dynamic src, Type dstType, dynamic dst)
+        public static dynamic Convert(Type srcType, dynamic src, Type dstType)
         {
             var converterType = Assembly.GetExecutingAssembly().GetTypes()
                 .Single(type =>               
@@ -69,42 +53,26 @@ namespace PersonalFont
                         inter.GenericTypeArguments[1] == dstType));
             
             dynamic converter = Activator.CreateInstance(converterType);
-            converter.Convert(src, dst);
+            return converter.Convert(src);
         }
 
         public T ConvertTo<T>()
-            where T : new()
         {
-            var newFormat = new T();
-            ConvertTo<T>(newFormat);
-            return newFormat;
+            return Format.ConvertTo<T>(this);
         }
 
-        public void ConvertTo<T>(T newFormat)
-        {
-            Format.ConvertTo<T>(this.GetType(), this, newFormat);
-        }
-
-        public T ConvertTo<T>(IConverter converter)
-            where T : new()
-        {
-            T newFormat = new T();
-            ConvertTo<T>(newFormat, converter);
-            return newFormat;
-        }
-
-        public void ConvertTo<T>(T newFormat, dynamic converter)
+        public T ConvertWith<T>(dynamic converter)
         {
             if (!converter.GetType().GetInterfaces().Contains(typeof(IConverter<,>)))
                 throw new ArgumentException("Invalid converter");
 
             if (converter.GetType().GenericTypeArguments[0] != this.GetType())
-                throw new ArgumentException("The converter cannot convert from this type");
+                throw new ArgumentException("Converter cannot convert from this type");
 
             if (converter.GetType().GenericTypeArguments[1] != typeof(T))
-                throw new ArgumentException("The converter cannot convert to that type");
+                throw new ArgumentException("Converter cannot convert to that type");
 
-            converter.Convert(this, newFormat);
+            return converter.Convert(this);
         }
     }
 }

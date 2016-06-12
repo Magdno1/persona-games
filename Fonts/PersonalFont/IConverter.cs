@@ -26,7 +26,7 @@ namespace PersonalFont
 
     public interface IConverter<TSrc, TDst> : IConverter
     {
-        void Convert(TSrc source, TDst destination);
+        TDst Convert(TSrc source);
     }
 }
 
