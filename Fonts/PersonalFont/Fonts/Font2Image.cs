@@ -68,11 +68,8 @@ namespace PersonalFont.Fonts
                     int x = c * (charWidth  + borderWidth);
                     int y = r * (charHeight + borderWidth);
 
-                    // Alignment due to rectangle drawing method.
+                    // Draw border
                     int borderAlign = (int)Math.Floor(borderWidth / 2.0);
-                    if (Type.GetType("Mono.Runtime") != null) // It changes for mono
-                        borderAlign += 1 - (borderWidth % 2);
-
                     if (borderWidth > 0) {
                         graphic.DrawRectangle(
                             borderPen,
