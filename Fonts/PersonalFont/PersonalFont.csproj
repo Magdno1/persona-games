@@ -47,9 +47,11 @@
     <Compile Include="Fonts\Glyph.cs" />
     <Compile Include="Fonts\Colour.cs" />
     <Compile Include="Fonts\Font.cs" />
+    <Compile Include="Persona\Binary2PersonaFont.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Folder Include="Fonts\" />
+    <Folder Include="Persona\" />
   </ItemGroup>
 </Project>

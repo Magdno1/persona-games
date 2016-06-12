@@ -24,7 +24,13 @@ namespace PersonalFont.Fonts
 {
     public struct Glyph
     {
-        public Colour[,] Image {
+        public int[,] Image {
+            get;
+            set;
+        }
+
+        public int BearingX
+        {
             get;
             set;
         }
@@ -34,19 +40,24 @@ namespace PersonalFont.Fonts
             set;
         }
 
+        public int Advance {
+            get;
+            set;
+        }
+
         public char Char {
             get;
             set;
         }
 
-        public Bitmap ToImage(bool transparent = false, int zoom = 1)
+        public Bitmap ToImage(Colour[] palette, bool transparent = false, int zoom = 1)
         {
             Bitmap bmp = new Bitmap(this.Image.GetLength(0) * zoom + 1,
                 this.Image.GetLength(1) * zoom + 1);
 
             for (int w = 0; w < this.Image.GetLength(0) * zoom; w++) {
                 for (int h = 0; h < this.Image.GetLength(1) * zoom; h++) {
-                    var color = this.Image[w / zoom, h / zoom].ToColor();
+                    var color = palette[this.Image[w / zoom, h / zoom]].ToColor();
                     if (transparent && color == Color.FromArgb(255, 255, 255))
                         color = Color.FromArgb(0, color);
 

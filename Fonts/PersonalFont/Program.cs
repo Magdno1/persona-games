@@ -19,6 +19,9 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
+using Libgame.IO;
+using System.IO;
+using PersonalFont.Fonts;
 
 namespace PersonalFont
 {
@@ -26,6 +29,11 @@ namespace PersonalFont
     {
         public static void Main(string[] args)
         {
+            const string FontPath = @"/home/benito/Descargas/ACHMEDKILLSYOU/FONT0.FNT";
+            var stream = new DataStream(FontPath, FileMode.Open, FileAccess.Read);
+            var reader = new DataReader(stream);
+            var font = Format.ConvertTo<Font>(reader);
+            font.ExportMap("/home/benito/myfont.png");
         }
     }
 }

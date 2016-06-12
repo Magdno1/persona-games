@@ -39,11 +39,11 @@ namespace PersonalFont
             Convert(typeof(TSrc), source, dstType, destination);
         }
 
-        public static TDst ConvertTo<TDst>(Type srcType, dynamic source)
+        public static TDst ConvertTo<TDst>(dynamic source)
             where TDst : new()
         {
             var newFormat = new TDst();
-            ConvertTo<TDst>(srcType, source, newFormat);
+            ConvertTo<TDst>(source.GetType(), source, newFormat);
             return newFormat;
         }
 
@@ -59,12 +59,15 @@ namespace PersonalFont
 
         public static void Convert(Type srcType, dynamic src, Type dstType, dynamic dst)
         {
-            var converterType = Assembly.GetExecutingAssembly().GetTypes().Single(type =>
-                type.IsClass &&
-                type.GetInterfaces().Contains(typeof(IConverter<,>)) &&
-                type.GenericTypeArguments[0] == srcType &&
-                type.GenericTypeArguments[1] == dstType);
-
+            var converterType = Assembly.GetExecutingAssembly().GetTypes()
+                .Single(type =>               
+                    type.IsClass &&
+                    type.GetInterfaces().Any(inter =>
+                        inter.IsGenericType &&
+                        inter.GetGenericTypeDefinition().Equals(typeof(IConverter<,>)) &&
+                        inter.GenericTypeArguments[0] == srcType &&
+                        inter.GenericTypeArguments[1] == dstType));
+            
             dynamic converter = Activator.CreateInstance(converterType);
             converter.Convert(src, dst);
         }
