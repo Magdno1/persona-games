@@ -1,0 +1,3 @@
+[submodule "Fonts/PersonalFont/libgame"]
+	path = Fonts/PersonalFont/libgame
+	url = git@github.com:pleonex/libgame
