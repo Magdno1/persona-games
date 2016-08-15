@@ -11,11 +11,14 @@ Offset | Size | Descripcion
 Offset | Size | Descripcion
 ------ | ---- | -----------
 0x00   | 0x04 | Size
-0x04   | 0x0A | Unknown
+0x04   | 0x04 | File size - VWT size - 7
+0x08   | 0x06 | Unknown (section flags?) (constant 0x010101)
 0x0E   | 0x02 | Glyph count
 0x10   | 0x02 | Tile width
 0x12   | 0x02 | Tile height
-0x14   | 0x0C | Unknown
+0x14   | 0x02 | Bytes per glyph
+0x16   | 0x02 | Image depth (0x01: 4bpp)
+0x18   | 0x08 | Padding
 
 ## Palette
 There are 4 bytes for each color. There are in total 16 colors (4bpp).
@@ -44,8 +47,10 @@ Offset | Size | Descripcion
 ------ | ---- | -----------
 0x00   | 0x04 | Header size
 0x04   | 0x04 | Huffman tree size
-0x08   | 0x04 | Compressed data size
-0x0C   | 0x0C | Unknown
+0x08   | 0x04 | Compressed data size in bytes
+0x0C   | 0x04 | Compressed data size in bits
+0x10   | 0x04 | Decompressed bytes per glyph
+0x14   | 0x04 | Number of glyphs (+1?)
 0x18   | 0x04 | Compressed glyph position table size
 0x1C   | 0x04 | Uncompressed font size
 

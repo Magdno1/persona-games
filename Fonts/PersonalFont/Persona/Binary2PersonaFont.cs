@@ -125,7 +125,7 @@ namespace PersonalFont.Persona
         private static void Decompress(byte[] tree, byte[] data, byte[] output,
             int position)
         {
-            int dataPosition = position / 16;
+            int dataPosition = position / 16 * 2;   // In 16-bits units
             int codewordSize = 16 - position % 16;
             ushort codeword = (ushort)(BitConverter.ToUInt16(data, dataPosition) >> (position % 16));
             dataPosition += 2;
@@ -138,6 +138,7 @@ namespace PersonalFont.Persona
                 if (codewordSize == 0) {
                     codeword = BitConverter.ToUInt16(data, dataPosition);
                     dataPosition += 2;
+                    codewordSize += 16;
                 }
 
                 // Read each bit to navigate through the tree
