@@ -20,28 +20,18 @@
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System.Reflection;
 using System.Runtime.CompilerServices;
-
-// Information about this assembly is defined by the following attributes.
-// Change them to the values specific to your project.
+using Mono.Addins;
 
 [assembly: AssemblyTitle("PersonalFont")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Export and import font files for Persona games")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("")]
-[assembly: AssemblyCopyright("Benito Palacios Sánchez")]
+[assembly: AssemblyProduct("PersonaTools")]
+[assembly: AssemblyCopyright("Benito Palacios Sánchez (aka pleonex)")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-
-// The assembly version has the format "{Major}.{Minor}.{Build}.{Revision}".
-// The form "{Major}.{Minor}.*" will automatically update the build and revision,
-// and "{Major}.{Minor}.{Build}.*" will update just the revision.
-
 [assembly: AssemblyVersion("1.0.*")]
 
-// The following attributes are used to specify the signing key for the assembly,
-// if desired. See the Mono documentation for more information about signing.
-
-//[assembly: AssemblyDelaySign(false)]
-//[assembly: AssemblyKeyFile("")]
-
+// Mono.Addins
+[assembly: Addin]
+[assembly: AddinDependency("libgame", "1.0")]

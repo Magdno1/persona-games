@@ -19,12 +19,14 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
-using System.IO;
-using System.Diagnostics;
-using Libgame.IO;
-using PersonalFont.Fonts;
 using System.Drawing;
+using System.Diagnostics;
+using System.IO;
 using System.Xml.Linq;
+using Libgame.IO;
+using Libgame.FileFormat;
+using Mono.Addins;
+using PersonalFont.Fonts;
 
 namespace PersonalFont
 {
@@ -48,6 +50,12 @@ namespace PersonalFont
                 return;
             }
 
+            // Initialize the plugin system
+            if (!AddinManager.IsInitialized) {
+                AddinManager.Initialize(".addins");
+                AddinManager.Registry.Update();
+            }
+
             Stopwatch watch = Stopwatch.StartNew();
 
             // Get the output paths
@@ -57,13 +65,14 @@ namespace PersonalFont
             string infoPath = Path.Combine(baseDir, fileName + ".xml");
 
             // Read font file
-            var stream = new DataStream(fontPath, FileMode.Open, FileAccess.Read);
-            var reader = new DataReader(stream);
-            var font = Format.ConvertTo<GameFont>(reader);
-
-            // Export to image and XML
-            font.ConvertTo<Image>().Save(imagePath);
-            font.ConvertTo<XDocument>().Save(infoPath);
+            using (var stream = new DataStream(fontPath, FileMode.Open, FileAccess.Read)) {
+                using (var reader = new BinaryFormat(stream)) {
+                    // Export to image and XML
+                    var font = Format.ConvertTo<GameFont>(reader);
+                    font.ConvertTo<Image>().Save(imagePath);
+                    font.ConvertTo<XDocument>().Save(infoPath);
+                }
+            }
 
             watch.Stop();
             Console.WriteLine("Done in {0}", watch.Elapsed);

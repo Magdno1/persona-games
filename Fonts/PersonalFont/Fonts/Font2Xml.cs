@@ -19,9 +19,12 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System.Xml.Linq;
+using Libgame.FileFormat;
+using Mono.Addins;
 
 namespace PersonalFont.Fonts
 {
+    [Extension]
     public class Font2Xml : IConverter<GameFont, XDocument>
     {
         public XDocument Convert(GameFont font)

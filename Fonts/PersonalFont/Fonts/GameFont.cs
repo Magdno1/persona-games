@@ -19,6 +19,7 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System.Collections.Generic;
+using Libgame.FileFormat;
 
 namespace PersonalFont.Fonts
 {
@@ -28,6 +29,12 @@ namespace PersonalFont.Fonts
         public int CharHeight { get; set; }
         public List<Glyph> Glyphs { get; set; }
         public Colour[] Palette { get; set; }
+
+        public override string Name { get; } = "ps2.persona.font";
+
+        protected override void Dispose (bool freeManagedResourcesAlso)
+        {
+        }
     }
 }
 

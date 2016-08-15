@@ -21,24 +21,30 @@
 using System;
 using System.Collections.Generic;
 using Libgame.IO;
+using Libgame.FileFormat;
+using Mono.Addins;
 using PersonalFont.Fonts;
 
 namespace PersonalFont.Persona
 {
-    public class Binary2PersonaFont :
-    IConverter<DataReader, GameFont>
+    [Extension]
+    public class Binary2PersonaFont : IConverter<BinaryFormat, GameFont>
     {
-        public GameFont Convert(DataReader reader)
+        public GameFont Convert(BinaryFormat binary)
         {
+            var reader = new DataReader(binary.Stream);
             var font = new GameFont();
 
             // Main header
             reader.ReadUInt32();    // header size
-            reader.ReadBytes(0xA);  // unknown
+            reader.ReadBytes(4);    // Size in memory of some sections
+            reader.ReadBytes(6);    // Flags
             var numGlyphs = reader.ReadUInt16();
             font.CharWidth = reader.ReadUInt16();
             font.CharHeight = reader.ReadUInt16();
-            reader.ReadBytes(0x0C); // unknown
+            reader.ReadUInt16();    // Pixels per glyph
+            reader.ReadUInt16();    // Depth (1: 4bpp)
+            reader.ReadBytes(8);    // Padding
 
             // Palette
             font.Palette = new Colour[16];
@@ -76,8 +82,10 @@ namespace PersonalFont.Persona
             reader.ReadUInt32(); // header size
             var huffmanTreeSize = reader.ReadInt32();
             var compressedDataSize = reader.ReadInt32();
-            reader.ReadBytes(0x0C); // unknown
-            var glyphPositionTableSize = reader.ReadInt32();
+            reader.ReadUInt32();    // compressed size in bits
+            var glyphSize = reader.ReadUInt32();
+            var numImages = reader.ReadUInt32();
+            reader.ReadInt32();     // glyph position table size
             reader.ReadUInt32();    // uncompressed font size
 
             // ..Huffman Tree
@@ -85,63 +93,78 @@ namespace PersonalFont.Persona
             var huffmanTree = reader.ReadBytes(huffmanTreeSize - 2);
 
             // ..Glyph Position Table
-            // We don't need the position since we are decompressing all of them.
-            reader.ReadBytes(glyphPositionTableSize);
+            var glyphPositions = new int[numImages];
+            for (int i = 0; i < numImages; i++)
+                glyphPositions[i] = reader.ReadInt32();
 
             // ..Compressed data
             var compressedGlyphs = reader.ReadBytes(compressedDataSize);
-
-            var decompressed = Decompress(huffmanTree, compressedGlyphs);
-            int position = 0;
-            for (int i = 0; i < numGlyphs; i++) {
+            for (int i = 0; i < numImages && i < numGlyphs; i++) {
                 var glyph = font.Glyphs[i];
+
+                // Get the decompressed bytes for the glyph
+                var decompressed = new byte[glyphSize * 2];
+                Decompress(huffmanTree,
+                    compressedGlyphs,
+                    decompressed,
+                    glyphPositions[i]);
+                int position = 0;
+
+                // Convert into array format
                 glyph.Image = new int[font.CharWidth, font.CharHeight];
                 for (int h = 0; h < font.CharHeight; h++)
                     for (int w = 0; w < font.CharWidth; w++)
-                        if (position < decompressed.Length)
-                            glyph.Image[w, h] = decompressed[position++];
+                        glyph.Image[w, h] = decompressed[position++];
+
                 font.Glyphs[i] = glyph;
             }
 
             return font;
         }
 
-        private static byte[] Decompress(byte[] tree, byte[] data)
+        private static void Decompress(byte[] tree, byte[] data, byte[] output,
+            int position)
         {
-            var output = new List<byte>();
-            int dataPosition = 0;
+            int dataPosition = position / 16;
+            int codewordSize = 16 - position % 16;
+            ushort codeword = (ushort)(BitConverter.ToUInt16(data, dataPosition) >> (position % 16));
+            dataPosition += 2;
+
+            int outputPosition = 0;
             int treePosition = 0;
 
-            while (dataPosition + 2 < data.Length) {
+            while (outputPosition < output.Length) {
                 // Get the codeword
-                ushort codeword = BitConverter.ToUInt16(data, dataPosition);
-                dataPosition += 2;
+                if (codewordSize == 0) {
+                    codeword = BitConverter.ToUInt16(data, dataPosition);
+                    dataPosition += 2;
+                }
 
                 // Read each bit to navigate through the tree
-                for (int i = 0; i < 16; i++) {
-                    // If the bit is set, go to the right
-                    if (((codeword >> i) & 1) == 1)
-                        treePosition += 2;
+                // If the bit is set, go to the right
+                if ((codeword & 1) == 1)
+                    treePosition += 2;
 
-                    // Go to next node
-                    ushort nextNodeIdx = BitConverter.ToUInt16(tree, treePosition);
-                    treePosition = nextNodeIdx * 6;
-                    ushort nextNode = BitConverter.ToUInt16(tree, treePosition);
+                // Update codeword
+                codeword >>= 1;
+                codewordSize--;
 
-                    // If the next left node is 0, this node is a value
-                    if (nextNode == 0) {
-                        // The value is in the right node place
-                        byte val = tree[treePosition + 2];
-                        output.Add((byte)(val & 0xF));
-                        output.Add((byte)(val >> 4));
+                // Go to next node
+                ushort nextNodeIdx = BitConverter.ToUInt16(tree, treePosition);
+                treePosition = nextNodeIdx * 6;
+                ushort nextNode = BitConverter.ToUInt16(tree, treePosition);
 
-                        // Reset navigation
-                        treePosition = 0;
-                    }
+                // If the next left node is 0, this node is a value
+                if (nextNode == 0) {
+                    // The value is in the right node place
+                    byte val = tree[treePosition + 2];
+                    output[outputPosition++] = (byte)(val & 0xF);
+                    output[outputPosition++] = (byte)(val >> 4);
+
+                    // Reset navigation
+                    treePosition = 0;
                 }
             }
-
-            return output.ToArray();
         }
     }
 }

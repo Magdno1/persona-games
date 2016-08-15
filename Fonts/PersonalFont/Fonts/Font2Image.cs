@@ -21,9 +21,12 @@
 using System;
 using System.Drawing;
 using System.Collections.Generic;
+using Libgame.FileFormat;
+using Mono.Addins;
 
 namespace PersonalFont.Fonts
 {
+    [Extension]
     public class Font2Image : IConverter<GameFont, Image>
     {
         private const int CharsPerLine = 16;
