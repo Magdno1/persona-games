@@ -27,11 +27,23 @@ using Mono.Addins;
 namespace PersonalFont.Fonts
 {
     [Extension]
-    public class Font2Image : IConverter<GameFont, Image>
+    public class Font2Image : IConverter<GameFont, Image>, IConverter<Image, GameFont>
     {
         private const int CharsPerLine = 16;
         private const int BorderThickness = 2;
         private static readonly Pen BorderPen = new Pen(Color.Olive, BorderThickness);
+
+        private readonly GameFont font;
+
+        public Font2Image(GameFont font)
+        {
+            this.font = font;
+        }
+
+        public Font2Image()
+        {
+            font = null;
+        }
 
         public Image Convert(GameFont font)
         {
@@ -43,6 +55,16 @@ namespace PersonalFont.Fonts
 
             return CreateImage(font.Glyphs, font.Palette, BorderPen,
                 font.CharWidth, font.CharHeight, numRows, numColumns);
+        }
+
+        public GameFont Convert(Image image)
+        {
+            var newFont = font ?? new GameFont();
+
+            newFont.Glyphs = new List<Glyph>();
+            ParseImage(newFont);
+
+            return newFont;
         }
 
         private static Image CreateImage(IList<Glyph> glyphs, Colour[] palette,
@@ -112,6 +134,11 @@ namespace PersonalFont.Fonts
             }
 
             return bmp;
+        }
+
+        private static void ParseImage(GameFont font)
+        {
+            throw new NotImplementedException();
         }
     }
 }

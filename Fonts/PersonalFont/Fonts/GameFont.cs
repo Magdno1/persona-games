@@ -20,9 +20,11 @@
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System.Collections.Generic;
 using Libgame.FileFormat;
+using Mono.Addins;
 
 namespace PersonalFont.Fonts
 {
+    [Extension]
     public class GameFont : Format
     {
         public int CharWidth { get; set; }

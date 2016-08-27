@@ -30,7 +30,7 @@ using PersonalFont.Fonts;
 
 namespace PersonalFont
 {
-    class MainClass
+    public static class MainClass
     {
         public static void Main(string[] args)
         {
@@ -39,43 +39,64 @@ namespace PersonalFont
             Console.WriteLine("Source code at: https://github.com/pleonex/persona-games");
             Console.WriteLine();
 
-            if (args.Length != 1) {
-                Console.WriteLine("USAGE: PersonalFont.exe FontPath");
+            if (args.Length != 4) {
+                Console.WriteLine("USAGE: PersonalFont.exe e|i FontPath ImgPath XmlPath");
                 return;
             }
 
-            string fontPath = args[0];
-            if (!File.Exists(fontPath)) {
-                Console.WriteLine("ERROR: Font file does not exist");
-                return;
-            }
+            string mode = args[0];
+            string fontPath = args[1];
+            string imgPath = args[2];
+            string xmlPath = args[3];
 
-            // Initialize the plugin system
-            if (!AddinManager.IsInitialized) {
-                AddinManager.Initialize(".addins");
-                AddinManager.Registry.Update();
+            if (mode != "e" && mode != "i") {
+                Console.WriteLine("ERROR: Unknown command");
+                return;
             }
 
             Stopwatch watch = Stopwatch.StartNew();
 
-            // Get the output paths
-            string baseDir = Path.GetDirectoryName(fontPath);
-            string fileName = Path.GetFileNameWithoutExtension(fontPath);
-            string imagePath = Path.Combine(baseDir, fileName + ".png");
-            string infoPath = Path.Combine(baseDir, fileName + ".xml");
+            if (mode == "e")
+                Export(fontPath, imgPath, xmlPath);
+            else
+                Import(fontPath, imgPath, xmlPath);
+
+            watch.Stop();
+            Console.WriteLine("Done in {0}", watch.Elapsed);
+        }
+
+        static void Export(string fontPath, string imgPath, string xmlPath)
+        {
+            if (!File.Exists(fontPath)) {
+                Console.WriteLine("ERROR: Font file does not exist");
+                return;
+            }
 
             // Read font file
             using (var stream = new DataStream(fontPath, FileMode.Open, FileAccess.Read)) {
                 using (var reader = new BinaryFormat(stream)) {
                     // Export to image and XML
                     var font = Format.ConvertTo<GameFont>(reader);
-                    font.ConvertTo<Image>().Save(imagePath);
-                    font.ConvertTo<XDocument>().Save(infoPath);
+                    font.ConvertTo<Image>().Save(imgPath);
+                    font.ConvertTo<XDocument>().Save(xmlPath);
                 }
             }
+        }
 
-            watch.Stop();
-            Console.WriteLine("Done in {0}", watch.Elapsed);
+        static void Import(string fontPath, string imgPath, string xmlPath)
+        {
+            // Import the xml information.
+            var xml = XDocument.Load(xmlPath);
+            var font = Format.ConvertTo<GameFont>(xml);
+
+            // Import the glyph images.
+            var imgConverter = new Font2Image(font);
+            using (var img = Image.FromFile(imgPath))
+                imgConverter.Convert(img);
+
+            // Convert to binary and save
+            using (var bin = font.ConvertTo<BinaryFormat>())
+                bin.Stream.WriteTo(fontPath);
         }
     }
 }

@@ -18,6 +18,8 @@
 //
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+using System;
+using System.Collections.Generic;
 using System.Xml.Linq;
 using Libgame.FileFormat;
 using Mono.Addins;
@@ -25,8 +27,20 @@ using Mono.Addins;
 namespace PersonalFont.Fonts
 {
     [Extension]
-    public class Font2Xml : IConverter<GameFont, XDocument>
+    public class Font2Xml : IConverter<GameFont, XDocument>, IConverter<XDocument, GameFont>
     {
+        private readonly GameFont font;
+
+        public Font2Xml(GameFont font)
+        {
+            this.font = font;
+        }
+
+        public Font2Xml()
+        {
+            font = null;
+        }
+
         public XDocument Convert(GameFont font)
         {
             var xml = new XDocument(new XDeclaration("1.0", "utf-8", "true"));
@@ -44,6 +58,26 @@ namespace PersonalFont.Fonts
             }
 
             return xml;
+        }
+
+        public GameFont Convert(XDocument doc)
+        {
+            if (doc.Root.Name != "Font")
+                throw new FormatException("Invalid XML document");
+            
+            GameFont newFont = font ?? new GameFont();
+            newFont.Glyphs = new List<Glyph>();
+
+            foreach (var xmlGlyph in doc.Root.Elements("Glyph")) {
+                var glyph = new Glyph();
+                glyph.Char = (char)System.Convert.ToUInt16(xmlGlyph.Element("CharCode").Value);
+                glyph.BearingX = System.Convert.ToInt32(xmlGlyph.Element("BearingX").Value);
+                glyph.Width = System.Convert.ToInt32(xmlGlyph.Element("Width").Value);
+                glyph.Advance = System.Convert.ToInt32(xmlGlyph.Element("Advance").Value);
+                newFont.Glyphs.Add(glyph);
+            }
+
+            return newFont;
         }
     }
 }

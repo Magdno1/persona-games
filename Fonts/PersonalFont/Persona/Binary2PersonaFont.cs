@@ -122,8 +122,7 @@ namespace PersonalFont.Persona
             return font;
         }
 
-        private static void Decompress(byte[] tree, byte[] data, byte[] output,
-            int position)
+        static void Decompress(byte[] tree, byte[] data, byte[] output, int position)
         {
             int dataPosition = position / 16 * 2;   // In 16-bits units
             int codewordSize = 16 - position % 16;
