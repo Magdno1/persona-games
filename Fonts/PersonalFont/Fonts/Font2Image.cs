@@ -52,7 +52,6 @@ namespace PersonalFont.Fonts
         /// </summary>
         public Font2Image()
         {
-            font = null;
         }
 
         /// <summary>
@@ -62,6 +61,9 @@ namespace PersonalFont.Fonts
         /// <param name="font">The font to convert.</param>
         public Image Convert(GameFont font)
         {
+            if (font == null)
+                throw new ArgumentNullException(nameof(font));
+
             int numChars = font.Glyphs.Count;
 
             // Gets the number of columns and rows from the CharsPerLine value.

@@ -48,7 +48,6 @@ namespace PersonalFont.Fonts
         /// </summary>
         public Font2Xml()
         {
-            font = null;
         }
 
         /// <summary>
@@ -58,6 +57,9 @@ namespace PersonalFont.Fonts
         /// <param name="font">Font to convert.</param>
         public XDocument Convert(GameFont font)
         {
+            if (font == null)
+                throw new ArgumentNullException(nameof(font));
+
             var xml = new XDocument(new XDeclaration("1.0", "utf-8", "true"));
             var root = new XElement("Font");
             xml.Add(root);
@@ -82,6 +84,9 @@ namespace PersonalFont.Fonts
         /// <param name="doc">XML with font information.</param>
         public GameFont Convert(XDocument doc)
         {
+            if (doc == null)
+                throw new ArgumentNullException(nameof(doc));
+
             if (doc.Root.Name != "Font")
                 throw new FormatException("Invalid XML document");
             

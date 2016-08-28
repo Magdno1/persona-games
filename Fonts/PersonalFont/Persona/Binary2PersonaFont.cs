@@ -40,6 +40,9 @@ namespace PersonalFont.Persona
         /// <param name="binary">Binary format.</param>
         public GameFont Convert(BinaryFormat binary)
         {
+            if (binary == null)
+                throw new ArgumentNullException(nameof(binary));
+
             var reader = new DataReader(binary.Stream);
             var font = new GameFont();
 

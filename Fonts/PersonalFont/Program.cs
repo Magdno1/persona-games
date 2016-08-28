@@ -105,16 +105,16 @@ namespace PersonalFont
         {
             // Import the xml information.
             var xml = XDocument.Load(xmlPath);
-            var font = Format.ConvertTo<GameFont>(xml);
+            using (var font = Format.ConvertTo<GameFont>(xml)) {
+                // Import the glyph images.
+                var imgConverter = new Font2Image(font);
+                using (var img = Image.FromFile(imgPath))
+                    imgConverter.Convert(img);
 
-            // Import the glyph images.
-            var imgConverter = new Font2Image(font);
-            using (var img = Image.FromFile(imgPath))
-                imgConverter.Convert(img);
-
-            // Convert to binary and save
-            using (var bin = font.ConvertTo<BinaryFormat>())
-                bin.Stream.WriteTo(fontPath);
+                // Convert to binary and save
+                using (var bin = font.ConvertTo<BinaryFormat>())
+                    bin.Stream.WriteTo(fontPath);
+            }
         }
     }
 }

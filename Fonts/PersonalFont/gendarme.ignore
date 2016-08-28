@@ -1,0 +1,3 @@
+R: Gendarme.Rules.Portability.MonoCompatibilityReviewRule
+# Gendarme detects that Type.Equals is not implemented in Mono but this doesn't seem to be the case
+M: System.Boolean PersonalFont.Fonts.Colour::Equals(System.Object)

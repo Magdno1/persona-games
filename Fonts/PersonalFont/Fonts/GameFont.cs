@@ -46,7 +46,7 @@ namespace PersonalFont.Fonts
         /// Gets or sets the glyphs.
         /// </summary>
         /// <value>The glyphs.</value>
-        public List<Glyph> Glyphs { get; set; }
+        public IList<Glyph> Glyphs { get; set; }
 
         /// <summary>
         /// Gets or sets the palette.
