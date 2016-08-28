@@ -32,39 +32,21 @@ namespace PersonalFont.Fonts
     [Extension]
     public class Font2Xml : IConverter<GameFont, XDocument>, IConverter<XDocument, GameFont>
     {
-        readonly GameFont font;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Font2Xml"/> class.
-        /// </summary>
-        /// <param name="font">Font to fill.</param>
-        public Font2Xml(GameFont font)
-        {
-            this.font = font;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Font2Xml"/> class.
-        /// </summary>
-        public Font2Xml()
-        {
-        }
-
         /// <summary>
         /// Convert the specified font information into an XML.
         /// </summary>
         /// <returns>The XML with the font information.</returns>
-        /// <param name="font">Font to convert.</param>
-        public XDocument Convert(GameFont font)
+        /// <param name="source">Font to convert.</param>
+        public XDocument Convert(GameFont source)
         {
-            if (font == null)
-                throw new ArgumentNullException(nameof(font));
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
 
             var xml = new XDocument(new XDeclaration("1.0", "utf-8", "true"));
             var root = new XElement("Font");
             xml.Add(root);
 
-            foreach (var glyph in font.Glyphs) {
+            foreach (var glyph in source.Glyphs) {
                 var xmlGlyph = new XElement("Glyph");
                 root.Add(xmlGlyph);
 
@@ -81,27 +63,29 @@ namespace PersonalFont.Fonts
         /// Convert the specified XML into a font.
         /// </summary>
         /// <returns>The font with the XML information.</returns>
-        /// <param name="doc">XML with font information.</param>
-        public GameFont Convert(XDocument doc)
+        /// <param name="source">XML with font information.</param>
+        public GameFont Convert(XDocument source)
         {
-            if (doc == null)
-                throw new ArgumentNullException(nameof(doc));
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
 
-            if (doc.Root.Name != "Font")
+            if (source.Root.Name != "Font")
                 throw new FormatException("Invalid XML document");
             
-            GameFont newFont = font ?? new GameFont();
-            newFont.Glyphs = new List<Glyph>();
+            GameFont newFont = new GameFont();
+            var glyphs = new List<Glyph>();
 
-            foreach (var xmlGlyph in doc.Root.Elements("Glyph")) {
-                var glyph = new Glyph();
-                glyph.Char = (char)System.Convert.ToUInt16(xmlGlyph.Element("CharCode").Value);
-                glyph.BearingX = System.Convert.ToInt32(xmlGlyph.Element("BearingX").Value);
-                glyph.Width = System.Convert.ToInt32(xmlGlyph.Element("Width").Value);
-                glyph.Advance = System.Convert.ToInt32(xmlGlyph.Element("Advance").Value);
+            foreach (var xmlGlyph in source.Root.Elements("Glyph")) {
+                var glyph = new Glyph {
+                    Char = (char)System.Convert.ToUInt16(xmlGlyph.Element("CharCode").Value),
+                    BearingX = System.Convert.ToInt32(xmlGlyph.Element("BearingX").Value),
+                    Width = System.Convert.ToInt32(xmlGlyph.Element("Width").Value),
+                    Advance = System.Convert.ToInt32(xmlGlyph.Element("Advance").Value),
+                };
                 newFont.Glyphs.Add(glyph);
             }
 
+            newFont.SetGlyphs(glyphs);
             return newFont;
         }
     }

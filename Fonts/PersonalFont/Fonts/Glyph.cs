@@ -25,14 +25,7 @@ namespace PersonalFont.Fonts
     /// </summary>
     public struct Glyph
     {
-        /// <summary>
-        /// Gets or sets the image.
-        /// </summary>
-        /// <value>The image.</value>
-        public int[,] Image {
-            get;
-            set;
-        }
+        int[,] image;
 
         /// <summary>
         /// Gets or sets the bearing x.
@@ -69,6 +62,24 @@ namespace PersonalFont.Fonts
         public char Char {
             get;
             set;
+        }
+
+        /// <summary>
+        /// Sets the image.
+        /// </summary>
+        /// <param name="newImage">The glyph mage.</param>
+        public void SetImage(int[,] newImage)
+        {
+            image = (int[,])newImage?.Clone();
+        }
+
+        /// <summary>
+        /// Gets the image.
+        /// </summary>
+        /// <returns>The glyph image.</returns>
+        public int[,] GetImage()
+        {
+            return (int[,])image?.Clone();
         }
     }
 }

@@ -1,3 +1,21 @@
 R: Gendarme.Rules.Portability.MonoCompatibilityReviewRule
 # Gendarme detects that Type.Equals is not implemented in Mono but this doesn't seem to be the case
 M: System.Boolean PersonalFont.Fonts.Colour::Equals(System.Object)
+
+R: Gendarme.Rules.Correctness.EnsureLocalDisposalRule
+# Convert returns the same reference of the disposing variable font
+M: System.Void PersonalFont.MainClass::Import(System.String,System.String,System.String)
+# Cannot dispose since we are returning the reference
+M: PersonalFont.Fonts.GameFont PersonalFont.Persona.Binary2PersonaFont::Convert(Libgame.FileFormat.BinaryFormat)
+M: System.Drawing.Image PersonalFont.Fonts.Font2Image::CreateImage(PersonalFont.Fonts.GameFont,System.Drawing.Pen,System.Int32,System.Int32)
+M: System.Drawing.Bitmap PersonalFont.Fonts.Font2Image::Glyph2Image(PersonalFont.Fonts.Glyph,PersonalFont.Fonts.Colour[])
+M: PersonalFont.Fonts.GameFont PersonalFont.Fonts.Font2Xml::Convert(System.Xml.Linq.XDocument)
+
+R: Gendarme.Rules.Globalization.PreferIFormatProviderOverrideRule
+# It doesn't really make any difference and make longer code line
+M: PersonalFont.Fonts.GameFont PersonalFont.Fonts.Font2Xml::Convert(System.Xml.Linq.XDocument)
+
+R: Gendarme.Rules.Maintainability.VariableNamesShouldNotMatchFieldNamesRule
+# Methods are static so the rule doesn't have sense
+M: System.Drawing.Image PersonalFont.Fonts.Font2Image::CreateImage(PersonalFont.Fonts.GameFont,System.Drawing.Pen,System.Int32,System.Int32)
+M: System.Void PersonalFont.Fonts.Font2Image::ParseImage(System.Drawing.Image,PersonalFont.Fonts.GameFont)

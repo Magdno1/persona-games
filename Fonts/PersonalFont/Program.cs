@@ -106,8 +106,9 @@ namespace PersonalFont
             // Import the xml information.
             var xml = XDocument.Load(xmlPath);
             using (var font = Format.ConvertTo<GameFont>(xml)) {
-                // Import the glyph images.
-                var imgConverter = new Font2Image(font);
+                // Import the glyph images into the existing font.
+                var imgConverter = new Font2Image();
+                imgConverter.SetPartialDestination(font);
                 using (var img = Image.FromFile(imgPath))
                     imgConverter.Convert(img);
 

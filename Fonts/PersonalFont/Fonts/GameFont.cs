@@ -20,7 +20,9 @@
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace PersonalFont.Fonts
 {
+    using System;
     using System.Collections.Generic;
+    using System.Linq;
     using Libgame.FileFormat;
     using Mono.Addins;
 
@@ -30,6 +32,9 @@ namespace PersonalFont.Fonts
     [Extension]
     public class GameFont : Format
     {
+        Colour[] palette;
+        List<Glyph> glyphs;
+
         /// <summary>
         /// Gets or sets the width of the char.
         /// </summary>
@@ -43,16 +48,12 @@ namespace PersonalFont.Fonts
         public int CharHeight { get; set; }
 
         /// <summary>
-        /// Gets or sets the glyphs.
+        /// Gets the glyphs.
         /// </summary>
         /// <value>The glyphs.</value>
-        public IList<Glyph> Glyphs { get; set; }
-
-        /// <summary>
-        /// Gets or sets the palette.
-        /// </summary>
-        /// <value>The palette.</value>
-        public Colour[] Palette { get; set; }
+        public IList<Glyph> Glyphs {
+            get { return glyphs; }
+        }
 
         /// <summary>
         /// Gets the format's name.
@@ -60,9 +61,40 @@ namespace PersonalFont.Fonts
         /// <value>The name of the format.</value>
         public override string Name { get; } = "ps2.persona.font";
 
-        /// <inheritdoc/>
-        protected override void Dispose(bool freeManagedResourcesAlso)
+        /// <summary>
+        /// Sets the palette.
+        /// </summary>
+        /// <param name="newPalette">The palette.</param>
+        public void SetPalette(Colour[] newPalette)
         {
+            if (Disposed)
+                throw new ObjectDisposedException(GetType().Name);
+
+            palette = (Colour[])newPalette?.Clone();
+        }
+
+        /// <summary>
+        /// Gets the palette.
+        /// </summary>
+        /// <returns>The palette.</returns>
+        public Colour[] GetPalette()
+        {
+            if (Disposed)
+                throw new ObjectDisposedException(GetType().Name);
+
+            return (Colour[])palette?.Clone();
+        }
+
+        /// <summary>
+        /// Sets the glyphs.
+        /// </summary>
+        /// <param name="newGlyphs">New glyphs.</param>
+        public void SetGlyphs(IList<Glyph> newGlyphs)
+        {
+            if (Disposed)
+                throw new ObjectDisposedException(GetType().Name);
+
+            glyphs = newGlyphs.ToList();
         }
     }
 }

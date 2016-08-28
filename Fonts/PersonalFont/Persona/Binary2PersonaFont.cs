@@ -37,13 +37,13 @@ namespace PersonalFont.Persona
         /// Convert the specified binary format into a font.
         /// </summary>
         /// <returns>The converted font.</returns>
-        /// <param name="binary">Binary format.</param>
-        public GameFont Convert(BinaryFormat binary)
+        /// <param name="source">Binary format.</param>
+        public GameFont Convert(BinaryFormat source)
         {
-            if (binary == null)
-                throw new ArgumentNullException(nameof(binary));
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
 
-            var reader = new DataReader(binary.Stream);
+            var reader = new DataReader(source.Stream);
             var font = new GameFont();
 
             // Main header
@@ -58,18 +58,20 @@ namespace PersonalFont.Persona
             reader.ReadBytes(8);    // Padding
 
             // Palette
-            font.Palette = new Colour[16];
-            for (int i = 0; i < font.Palette.Length; i++) {
-                font.Palette[i] = new Colour(
+            var palette = new Colour[16];
+            for (int i = 0; i < palette.Length; i++) {
+                palette[i] = new Colour(
                     reader.ReadByte(),
                     reader.ReadByte(),
                     reader.ReadByte());
                 reader.ReadByte();  // Alpha
             }
 
+            font.SetPalette(palette);
+
             // Variable Width Table (VWT)
             int numGlyphInfo = reader.ReadInt32() / 2;    // Size
-            font.Glyphs = new List<Glyph>(numGlyphs);
+            var glyphs = new List<Glyph>(numGlyphs);
             for (int i = 0; i < numGlyphs; i++) {
                 var glyph = new Glyph();
                 glyph.Char = (char)i;   // There is no information about chars
@@ -81,8 +83,10 @@ namespace PersonalFont.Persona
                     glyph.Width = glyph.Advance - glyph.BearingX;
                 }
 
-                font.Glyphs.Add(glyph);
+                glyphs.Add(glyph);
             }
+
+            font.SetGlyphs(glyphs);
 
             // Reserved space
             reader.ReadBytes(4 + (4 * numGlyphs));
@@ -122,10 +126,11 @@ namespace PersonalFont.Persona
                 int position = 0;
 
                 // Convert into array format
-                glyph.Image = new int[font.CharWidth, font.CharHeight];
+                int[,] glyphImg = new int[font.CharWidth, font.CharHeight];
                 for (int h = 0; h < font.CharHeight; h++)
                     for (int w = 0; w < font.CharWidth; w++)
-                        glyph.Image[w, h] = decompressed[position++];
+                        glyphImg[w, h] = decompressed[position++];
+                glyph.SetImage(glyphImg);
 
                 font.Glyphs[i] = glyph;
             }

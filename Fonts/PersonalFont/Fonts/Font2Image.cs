@@ -30,62 +30,62 @@ namespace PersonalFont.Fonts
     /// Converter between a font and an image.
     /// </summary>
     [Extension]
-    public class Font2Image : IConverter<GameFont, Image>, IConverter<Image, GameFont>
+    public class Font2Image :
+        IConverter<GameFont, Image>, IPartialConverter<Image, GameFont>
     {
         const int CharsPerLine = 16;
         const int BorderThickness = 2;
         static readonly Pen BorderPen = new Pen(Color.Olive, BorderThickness);
 
-        readonly GameFont font;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Font2Image"/> class.
-        /// </summary>
-        /// <param name="font">Font to fill.</param>
-        public Font2Image(GameFont font)
-        {
-            this.font = font;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Font2Image"/> class.
-        /// </summary>
-        public Font2Image()
-        {
-        }
+        GameFont font;
 
         /// <summary>
         /// Converts the specified font into an image.
         /// </summary>
         /// <returns>The image with the font glyphs.</returns>
-        /// <param name="font">The font to convert.</param>
-        public Image Convert(GameFont font)
+        /// <param name="source">The font to convert.</param>
+        public Image Convert(GameFont source)
         {
-            if (font == null)
-                throw new ArgumentNullException(nameof(font));
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
 
-            int numChars = font.Glyphs.Count;
+            int numChars = source.Glyphs.Count;
 
             // Gets the number of columns and rows from the CharsPerLine value.
             int numColumns = (numChars < CharsPerLine) ? numChars : CharsPerLine;
             int numRows    = (int)Math.Ceiling((double)numChars / numColumns);
 
-            return CreateImage(font, BorderPen, numRows, numColumns);
+            return CreateImage(source, BorderPen, numRows, numColumns);
+        }
+
+        /// <summary>
+        /// Sets the partial destination.
+        /// </summary>
+        /// <param name="destination">Font to fill with glyphs.</param>
+        public void SetPartialDestination(GameFont destination)
+        {
+            font = destination;
         }
 
         /// <summary>
         /// Converts the specified image into a font.
         /// </summary>
+        /// <remarks>
+        /// Since we need some parameters to parse the glyphs image like the sizes and
+        /// palette, we can't create a new font object. For this reason,
+        /// <see cref="M:SetPartialDestionation"/> has be to called before converting from
+        /// an image. The font object could be created from the XML information. 
+        /// </remarks>
         /// <returns>The font with the image glyphs.</returns>
-        /// <param name="image">The image to convert.</param>
-        public GameFont Convert(Image image)
+        /// <param name="source">The image to convert.</param>
+        public GameFont Convert(Image source)
         {
-            var newFont = font ?? new GameFont();
+            if (font == null)
+                throw new InvalidOperationException(
+                    "No font to fill: Missing call to SetPartialDestination");
 
-            newFont.Glyphs = new List<Glyph>();
-            ParseImage(image, newFont);
-
-            return newFont;
+            ParseImage(source, font);
+            return font;
         }
 
         /// <summary>
@@ -107,38 +107,37 @@ namespace PersonalFont.Fonts
             int height = (numRows    * font.CharHeight) + ((numRows    + 1) * borderWidth);
 
             Bitmap image = new Bitmap(width, height);
-            Graphics graphic = Graphics.FromImage(image);
+            using (var graphic = Graphics.FromImage(image)) {
+                // Draw chars
+                for (int r = 0; r < numRows; r++) {
+                    for (int c = 0; c < numColumns; c++) {
+                        int index = (r * numColumns) + c; // Index of the glyph
+                        if (index >= numChars)
+                            break;
 
-            // Draw chars
-            for (int r = 0; r < numRows; r++) {
-                for (int c = 0; c < numColumns; c++) {
-                    int index = (r * numColumns) + c; // Index of the glyph
-                    if (index >= numChars)
-                        break;
+                        // Gets coordinates
+                        int x = c * (font.CharWidth + borderWidth);
+                        int y = r * (font.CharHeight + borderWidth);
 
-                    // Gets coordinates
-                    int x = c * (font.CharWidth  + borderWidth);
-                    int y = r * (font.CharHeight + borderWidth);
+                        // Draw border
+                        int borderAlign = (int)Math.Floor(borderWidth / 2.0);
+                        if (borderWidth > 0) {
+                            graphic.DrawRectangle(
+                                borderPen,
+                                x + borderAlign,
+                                y + borderAlign,
+                                font.CharWidth + borderWidth,
+                                font.CharHeight + borderWidth);
+                        }
 
-                    // Draw border
-                    int borderAlign = (int)Math.Floor(borderWidth / 2.0);
-                    if (borderWidth > 0) {
-                        graphic.DrawRectangle(
-                            borderPen,
-                            x + borderAlign,
-                            y + borderAlign,
-                            font.CharWidth  + borderWidth,
-                            font.CharHeight + borderWidth);
+                        graphic.DrawImage(
+                            Glyph2Image(font.Glyphs[index], font.GetPalette()),
+                            x + borderWidth,
+                            y + borderWidth);
                     }
-
-                    graphic.DrawImage(
-                        Glyph2Image(font.Glyphs[index], font.Palette),
-                        x + borderWidth,
-                        y + borderWidth);
                 }
             }
 
-            graphic.Dispose();
             return image;
         }
 
@@ -150,11 +149,12 @@ namespace PersonalFont.Fonts
         /// <param name="palette">Palette for the glyph.</param>
         static Bitmap Glyph2Image(Glyph glyph, Colour[] palette)
         {
-            Bitmap bmp = new Bitmap(glyph.Image.GetLength(0), glyph.Image.GetLength(1));
-            for (int w = 0; w < glyph.Image.GetLength(0); w++) {
-                for (int h = 0; h < glyph.Image.GetLength(1); h++) {
+            int[,] glyphImg = glyph.GetImage();
+            Bitmap bmp = new Bitmap(glyphImg.GetLength(0), glyphImg.GetLength(1));
+            for (int w = 0; w < glyphImg.GetLength(0); w++) {
+                for (int h = 0; h < glyphImg.GetLength(1); h++) {
                     // Get color index
-                    var colorIdx = glyph.Image[w, h];
+                    var colorIdx = glyphImg[w, h];
                     if (colorIdx >= palette.Length) {
                         Console.WriteLine("ERROR: Color not found in palette");
                         colorIdx = 0;
