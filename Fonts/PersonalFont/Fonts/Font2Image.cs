@@ -22,7 +22,7 @@ namespace PersonalFont.Fonts
 {
     using System;
     using System.Drawing;
-    using System.Collections.Generic;
+    using System.Linq;
     using Libgame.FileFormat;
     using Mono.Addins;
 
@@ -80,11 +80,20 @@ namespace PersonalFont.Fonts
         /// <param name="source">The image to convert.</param>
         public GameFont Convert(Image source)
         {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+
             if (font == null)
                 throw new InvalidOperationException(
                     "No font to fill: Missing call to SetPartialDestination");
 
-            ParseImage(source, font);
+            int numChars = font.Glyphs.Count;
+
+            // Gets the number of columns and rows from the CharsPerLine value.
+            int numColumns = (numChars < CharsPerLine) ? numChars : CharsPerLine;
+            int numRows = (int)Math.Ceiling((double)numChars / numColumns);
+
+            ParseImage(source, font, BorderPen, numRows, numColumns);
             return font;
         }
 
@@ -172,11 +181,73 @@ namespace PersonalFont.Fonts
         /// <summary>
         /// Gest the glyph from an image and add to the specified font.
         /// </summary>
-        /// <param name="image">Image to get glyphs.</param>
-        /// <param name="font">Font to add the glyphs.</param>
-        static void ParseImage(Image image, GameFont font)
+        /// <param name="img">The image.</param>
+        /// <param name="font">The font.</param>
+        /// <param name="borderPen">Border pen.</param>
+        /// <param name="numRows">Number rows.</param>
+        /// <param name="numCols">Number columns.</param>
+        static void ParseImage(Image img, GameFont font, Pen borderPen, int numRows, int numCols)
         {
-            throw new NotImplementedException();
+            var bitmap = img as Bitmap;
+            if (bitmap == null)
+                throw new InvalidCastException("Cannot convert image to bitmap");
+
+            int numChars = font.Glyphs.Count;
+            int borderWidth = (int)borderPen.Width;
+
+            int width  = (numCols * font.CharWidth)  + ((numCols + 1) * borderWidth);
+            int height = (numRows * font.CharHeight) + ((numRows + 1) * borderWidth);
+            if (width != img.Width || height != img.Height)
+                throw new ArgumentException("Incorrect image size.");
+
+            Colour[] palette = font.GetPalette();
+            for (int i = 0; i < font.Glyphs.Count(); i++) {
+                font.Glyphs[i].SetImage(Image2Glyph(
+                    bitmap,
+                    i,
+                    palette,
+                    font.CharWidth,
+                    font.CharHeight,
+                    numCols,
+                    borderWidth));
+            }
+        }
+
+        /// <summary>
+        /// Image2s the glyph.
+        /// </summary>
+        /// <returns>The glyph.</returns>
+        /// <param name="img">The glpyhs image.</param>
+        /// <param name="glyphIdx">Glyph index.</param>
+        /// <param name="palette">Glyph palette.</param>
+        /// <param name="charWidth">Char width.</param>
+        /// <param name="charHeight">Char height.</param>
+        /// <param name="numCols">Number columns.</param>
+        /// <param name="borderWidth">Border width.</param>
+        static int[,] Image2Glyph(Bitmap img, int glyphIdx, Colour[] palette,
+                int charWidth, int charHeight, int numCols, int borderWidth)
+        {
+            int[,] glyph = new int[charWidth, charHeight];
+
+            int column = glyphIdx % numCols;
+            int row    = glyphIdx / numCols;
+
+            int startX = (column * charWidth)  + ((column + 1) * borderWidth);
+            int startY = (row    * charHeight) + ((row    + 1) * borderWidth);
+
+            for (int x = startX, gx = 0; x < startX + charWidth; x++, gx++) {
+                for (int y = startY, gy = 0; y < startY + charHeight; y++, gy++) {
+                    var color = Colour.FromColor(img.GetPixel(x, y));
+                    int colorIdx = Array.IndexOf(palette, color);
+                    if (colorIdx == -1)
+                        throw new FormatException(
+                            string.Format("Invalid color at {0}, {1}", x, y));
+
+                    glyph[gx, gy] = colorIdx;
+                }
+            }
+
+            return glyph;
         }
     }
 }

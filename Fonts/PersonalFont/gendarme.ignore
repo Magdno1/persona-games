@@ -14,8 +14,10 @@ M: PersonalFont.Fonts.GameFont PersonalFont.Fonts.Font2Xml::Convert(System.Xml.L
 R: Gendarme.Rules.Globalization.PreferIFormatProviderOverrideRule
 # It doesn't really make any difference and make longer code line
 M: PersonalFont.Fonts.GameFont PersonalFont.Fonts.Font2Xml::Convert(System.Xml.Linq.XDocument)
+M: System.Xml.Linq.XDocument PersonalFont.Fonts.Font2Xml::Convert(PersonalFont.Fonts.GameFont)
+M: System.Int32[0...,0...] PersonalFont.Fonts.Font2Image::Image2Glyph(System.Drawing.Bitmap,System.Int32,PersonalFont.Fonts.Colour[],System.Int32,System.Int32,System.Int32,System.Int32)
 
 R: Gendarme.Rules.Maintainability.VariableNamesShouldNotMatchFieldNamesRule
 # Methods are static so the rule doesn't have sense
 M: System.Drawing.Image PersonalFont.Fonts.Font2Image::CreateImage(PersonalFont.Fonts.GameFont,System.Drawing.Pen,System.Int32,System.Int32)
-M: System.Void PersonalFont.Fonts.Font2Image::ParseImage(System.Drawing.Image,PersonalFont.Fonts.GameFont)
+M: System.Void PersonalFont.Fonts.Font2Image::ParseImage(System.Drawing.Image,PersonalFont.Fonts.GameFont,System.Drawing.Pen,System.Int32,System.Int32)

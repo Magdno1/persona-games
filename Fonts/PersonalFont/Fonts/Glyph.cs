@@ -23,7 +23,7 @@ namespace PersonalFont.Fonts
     /// <summary>
     /// Font glyph.
     /// </summary>
-    public struct Glyph
+    public class Glyph
     {
         int[,] image;
 

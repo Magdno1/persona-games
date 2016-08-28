@@ -46,10 +46,27 @@ namespace PersonalFont.Fonts
             var root = new XElement("Font");
             xml.Add(root);
 
+            root.Add(new XElement("CharWidth", source.CharWidth));
+            root.Add(new XElement("CharHeight", source.CharHeight));
+
+            var paletteRoot = new XElement("Palette");
+            root.Add(paletteRoot);
+            foreach (var color in source.GetPalette()) {
+                var xmlColor = new XElement("Color");
+                paletteRoot.Add(xmlColor);
+
+                xmlColor.Add(new XElement("Red", color.Red));
+                xmlColor.Add(new XElement("Green", color.Green));
+                xmlColor.Add(new XElement("Blue", color.Blue));
+            }
+
+            var glyphsRoot = new XElement("Glyphs");
+            root.Add(glyphsRoot);
             foreach (var glyph in source.Glyphs) {
                 var xmlGlyph = new XElement("Glyph");
-                root.Add(xmlGlyph);
+                glyphsRoot.Add(xmlGlyph);
 
+                xmlGlyph.Add(new XComment(string.Format(" ({0}) ", glyph.Char)));
                 xmlGlyph.Add(new XElement("CharCode", (ushort)glyph.Char));
                 xmlGlyph.Add(new XElement("BearingX", glyph.BearingX));
                 xmlGlyph.Add(new XElement("Width", glyph.Width));
@@ -71,18 +88,32 @@ namespace PersonalFont.Fonts
 
             if (source.Root.Name != "Font")
                 throw new FormatException("Invalid XML document");
-            
-            GameFont newFont = new GameFont();
-            var glyphs = new List<Glyph>();
 
-            foreach (var xmlGlyph in source.Root.Elements("Glyph")) {
+            XElement xmlRoot = source.Root;
+            GameFont newFont = new GameFont();
+
+            newFont.CharWidth = System.Convert.ToInt32(xmlRoot.Element("CharWidth").Value);
+            newFont.CharHeight = System.Convert.ToInt32(xmlRoot.Element("CharHeight").Value);
+
+            List<Colour> palette = new List<Colour>();
+            foreach (var xmlColor in xmlRoot.Element("Palette").Elements("Color")) {
+                palette.Add(new Colour(
+                    System.Convert.ToInt32(xmlColor.Element("Red").Value),
+                    System.Convert.ToInt32(xmlColor.Element("Green").Value),
+                    System.Convert.ToInt32(xmlColor.Element("Blue").Value)));
+            }
+
+            newFont.SetPalette(palette.ToArray());
+
+            var glyphs = new List<Glyph>();
+            foreach (var xmlGlyph in xmlRoot.Element("Glyphs").Elements("Glyph")) {
                 var glyph = new Glyph {
                     Char = (char)System.Convert.ToUInt16(xmlGlyph.Element("CharCode").Value),
                     BearingX = System.Convert.ToInt32(xmlGlyph.Element("BearingX").Value),
                     Width = System.Convert.ToInt32(xmlGlyph.Element("Width").Value),
                     Advance = System.Convert.ToInt32(xmlGlyph.Element("Advance").Value),
                 };
-                newFont.Glyphs.Add(glyph);
+                glyphs.Add(glyph);
             }
 
             newFont.SetGlyphs(glyphs);

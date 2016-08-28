@@ -88,9 +88,10 @@ namespace PersonalFont
             using (var stream = new DataStream(fontPath, FileMode.Open, FileAccess.Read)) {
                 using (var reader = new BinaryFormat(stream)) {
                     // Export to image and XML
-                    var font = Format.ConvertTo<GameFont>(reader);
-                    font.ConvertTo<Image>().Save(imgPath);
-                    font.ConvertTo<XDocument>().Save(xmlPath);
+                    using (var font = Format.ConvertTo<GameFont>(reader)) {
+                        font.ConvertTo<Image>().Save(imgPath);
+                        font.ConvertTo<XDocument>().Save(xmlPath);
+                    }
                 }
             }
         }
