@@ -74,7 +74,9 @@ namespace PersonalFont.Persona
             var glyphs = new List<Glyph>(numGlyphs);
             for (int i = 0; i < numGlyphs; i++) {
                 var glyph = new Glyph();
-                glyph.Char = (char)i;   // There is no information about chars
+
+                // There is no information about chars but it seems they starts at 0x20
+                glyph.Char = (char)(i + 0x20);
 
                 // There may be not information for all the glyphs
                 if (i < numGlyphInfo) {
