@@ -27,7 +27,7 @@ using Mono.Addins;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("PersonaTools")]
-[assembly: AssemblyCopyright("Benito Palacios Sánchez (aka pleonex)")]
+[assembly: AssemblyCopyright("Benito Palacios Sánchez (pleonex) 206")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: AssemblyVersion("1.0.*")]

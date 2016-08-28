@@ -18,29 +18,44 @@
 //
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-using System;
-using System.Collections.Generic;
-using System.Xml.Linq;
-using Libgame.FileFormat;
-using Mono.Addins;
-
 namespace PersonalFont.Fonts
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Xml.Linq;
+    using Libgame.FileFormat;
+    using Mono.Addins;
+
+    /// <summary>
+    /// Converter between a font and an XML.
+    /// </summary>
     [Extension]
     public class Font2Xml : IConverter<GameFont, XDocument>, IConverter<XDocument, GameFont>
     {
-        private readonly GameFont font;
+        readonly GameFont font;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Font2Xml"/> class.
+        /// </summary>
+        /// <param name="font">Font to fill.</param>
         public Font2Xml(GameFont font)
         {
             this.font = font;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Font2Xml"/> class.
+        /// </summary>
         public Font2Xml()
         {
             font = null;
         }
 
+        /// <summary>
+        /// Convert the specified font information into an XML.
+        /// </summary>
+        /// <returns>The XML with the font information.</returns>
+        /// <param name="font">Font to convert.</param>
         public XDocument Convert(GameFont font)
         {
             var xml = new XDocument(new XDeclaration("1.0", "utf-8", "true"));
@@ -60,6 +75,11 @@ namespace PersonalFont.Fonts
             return xml;
         }
 
+        /// <summary>
+        /// Convert the specified XML into a font.
+        /// </summary>
+        /// <returns>The font with the XML information.</returns>
+        /// <param name="doc">XML with font information.</param>
         public GameFont Convert(XDocument doc)
         {
             if (doc.Root.Name != "Font")
@@ -81,4 +101,3 @@ namespace PersonalFont.Fonts
         }
     }
 }
-

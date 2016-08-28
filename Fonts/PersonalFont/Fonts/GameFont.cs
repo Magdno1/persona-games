@@ -18,25 +18,51 @@
 //
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-using System.Collections.Generic;
-using Libgame.FileFormat;
-using Mono.Addins;
-
 namespace PersonalFont.Fonts
 {
+    using System.Collections.Generic;
+    using Libgame.FileFormat;
+    using Mono.Addins;
+
+    /// <summary>
+    /// Game font.
+    /// </summary>
     [Extension]
     public class GameFont : Format
     {
+        /// <summary>
+        /// Gets or sets the width of the char.
+        /// </summary>
+        /// <value>The width of the char.</value>
         public int CharWidth { get; set; }
+
+        /// <summary>
+        /// Gets or sets the height of the char.
+        /// </summary>
+        /// <value>The height of the char.</value>
         public int CharHeight { get; set; }
+
+        /// <summary>
+        /// Gets or sets the glyphs.
+        /// </summary>
+        /// <value>The glyphs.</value>
         public List<Glyph> Glyphs { get; set; }
+
+        /// <summary>
+        /// Gets or sets the palette.
+        /// </summary>
+        /// <value>The palette.</value>
         public Colour[] Palette { get; set; }
 
+        /// <summary>
+        /// Gets the format's name.
+        /// </summary>
+        /// <value>The name of the format.</value>
         public override string Name { get; } = "ps2.persona.font";
 
-        protected override void Dispose (bool freeManagedResourcesAlso)
+        /// <inheritdoc/>
+        protected override void Dispose(bool freeManagedResourcesAlso)
         {
         }
     }
 }
-

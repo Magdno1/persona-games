@@ -18,20 +18,26 @@
 //
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-using System;
-using System.Drawing;
-using System.Diagnostics;
-using System.IO;
-using System.Xml.Linq;
-using Libgame.IO;
-using Libgame.FileFormat;
-using Mono.Addins;
-using PersonalFont.Fonts;
-
 namespace PersonalFont
 {
-    public static class MainClass
+    using System;
+    using System.Diagnostics;
+    using System.Drawing;
+    using System.IO;
+    using System.Xml.Linq;
+    using Libgame.FileFormat;
+    using Libgame.IO;
+    using Fonts;
+
+    /// <summary>
+    /// Main class.
+    /// </summary>
+    static class MainClass
     {
+        /// <summary>
+        /// The entry point of the program, where the program control starts and ends.
+        /// </summary>
+        /// <param name="args">The command-line arguments.</param>
         public static void Main(string[] args)
         {
             Console.WriteLine("PersonalFont v.1.0 ~~ by pleonex ~~ Licensed under GPL3");
@@ -65,6 +71,12 @@ namespace PersonalFont
             Console.WriteLine("Done in {0}", watch.Elapsed);
         }
 
+        /// <summary>
+        /// Export the specified font information to an image and XML.
+        /// </summary>
+        /// <param name="fontPath">The font path.</param>
+        /// <param name="imgPath">The image path.</param>
+        /// <param name="xmlPath">the XML path.</param>
         static void Export(string fontPath, string imgPath, string xmlPath)
         {
             if (!File.Exists(fontPath)) {
@@ -83,6 +95,12 @@ namespace PersonalFont
             }
         }
 
+        /// <summary>
+        /// Import the specified image and XML into a font.
+        /// </summary>
+        /// <param name="fontPath">The font path.</param>
+        /// <param name="imgPath">The image path.</param>
+        /// <param name="xmlPath">The XML path.</param>
         static void Import(string fontPath, string imgPath, string xmlPath)
         {
             // Import the xml information.

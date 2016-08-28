@@ -18,18 +18,26 @@
 //
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-using System;
-using System.Collections.Generic;
-using Libgame.IO;
-using Libgame.FileFormat;
-using Mono.Addins;
-using PersonalFont.Fonts;
-
 namespace PersonalFont.Persona
 {
+    using System;
+    using System.Collections.Generic;
+    using Fonts;
+    using Libgame.IO;
+    using Libgame.FileFormat;
+    using Mono.Addins;
+
+    /// <summary>
+    /// Converter between a binary format and a font from Persona game.
+    /// </summary>
     [Extension]
     public class Binary2PersonaFont : IConverter<BinaryFormat, GameFont>
     {
+        /// <summary>
+        /// Convert the specified binary format into a font.
+        /// </summary>
+        /// <returns>The converted font.</returns>
+        /// <param name="binary">Binary format.</param>
         public GameFont Convert(BinaryFormat binary)
         {
             var reader = new DataReader(binary.Stream);
@@ -73,9 +81,8 @@ namespace PersonalFont.Persona
                 font.Glyphs.Add(glyph);
             }
 
-
             // Reserved space
-            reader.ReadBytes(4 + 4 * numGlyphs);
+            reader.ReadBytes(4 + (4 * numGlyphs));
 
             // Glyphs
             // ..Header
@@ -104,7 +111,8 @@ namespace PersonalFont.Persona
 
                 // Get the decompressed bytes for the glyph
                 var decompressed = new byte[glyphSize * 2];
-                Decompress(huffmanTree,
+                Decompress(
+                    huffmanTree,
                     compressedGlyphs,
                     decompressed,
                     glyphPositions[i]);
@@ -122,10 +130,17 @@ namespace PersonalFont.Persona
             return font;
         }
 
+        /// <summary>
+        /// Decompress the block of data using the HUFFMAN algorithm.
+        /// </summary>
+        /// <param name="tree">Huffman tree.</param>
+        /// <param name="data">Input compressed data.</param>
+        /// <param name="output">Output decompressed data.</param>
+        /// <param name="position">Start position of the compressed data.</param>
         static void Decompress(byte[] tree, byte[] data, byte[] output, int position)
         {
             int dataPosition = position / 16 * 2;   // In 16-bits units
-            int codewordSize = 16 - position % 16;
+            int codewordSize = 16 - (position % 16);
             ushort codeword = (ushort)(BitConverter.ToUInt16(data, dataPosition) >> (position % 16));
             dataPosition += 2;
 
@@ -168,4 +183,3 @@ namespace PersonalFont.Persona
         }
     }
 }
-
