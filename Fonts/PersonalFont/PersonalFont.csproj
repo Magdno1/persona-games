@@ -49,6 +49,7 @@
     <Compile Include="Fonts\Font2Image.cs" />
     <Compile Include="Fonts\GameFont.cs" />
     <Compile Include="Fonts\Font2Xml.cs" />
+    <Compile Include="Persona\Huffman.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

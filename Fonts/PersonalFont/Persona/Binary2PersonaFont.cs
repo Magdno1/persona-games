@@ -22,6 +22,7 @@ namespace PersonalFont.Persona
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using Fonts;
     using Libgame.IO;
     using Libgame.FileFormat;
@@ -31,7 +32,8 @@ namespace PersonalFont.Persona
     /// Converter between a binary format and a font from Persona game.
     /// </summary>
     [Extension]
-    public class Binary2PersonaFont : IConverter<BinaryFormat, GameFont>
+    public class Binary2PersonaFont :
+        IConverter<BinaryFormat, GameFont>, IConverter<GameFont, BinaryFormat>
     {
         /// <summary>
         /// Convert the specified binary format into a font.
@@ -120,7 +122,7 @@ namespace PersonalFont.Persona
 
                 // Get the decompressed bytes for the glyph
                 var decompressed = new byte[glyphSize * 2];
-                Decompress(
+                Huffman.Decompress(
                     huffmanTree,
                     compressedGlyphs,
                     decompressed,
@@ -141,55 +143,103 @@ namespace PersonalFont.Persona
         }
 
         /// <summary>
-        /// Decompress the block of data using the HUFFMAN algorithm.
+        /// Convert the specified font into binary format..
         /// </summary>
-        /// <param name="tree">Huffman tree.</param>
-        /// <param name="data">Input compressed data.</param>
-        /// <param name="output">Output decompressed data.</param>
-        /// <param name="position">Start position of the compressed data.</param>
-        static void Decompress(byte[] tree, byte[] data, byte[] output, int position)
+        /// <returns>Binary representation of the font.</returns>
+        /// <param name="source">Font to convert.</param>
+        public BinaryFormat Convert(GameFont source)
         {
-            int dataPosition = position / 16 * 2;   // In 16-bits units
-            int codewordSize = 16 - (position % 16);
-            ushort codeword = (ushort)(BitConverter.ToUInt16(data, dataPosition) >> (position % 16));
-            dataPosition += 2;
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
 
-            int outputPosition = 0;
-            int treePosition = 0;
+            var stream = new DataStream(new MemoryStream(), 0, 0);
+            var writer = new DataWriter(stream);
 
-            while (outputPosition < output.Length) {
-                // Get the codeword
-                if (codewordSize == 0) {
-                    codeword = BitConverter.ToUInt16(data, dataPosition);
-                    dataPosition += 2;
-                    codewordSize += 16;
-                }
+            int numGlyphs = source.Glyphs.Count;
+            int pixGlyph = source.CharWidth * source.CharHeight;
 
-                // Read each bit to navigate through the tree
-                // If the bit is set, go to the right
-                if ((codeword & 1) == 1)
-                    treePosition += 2;
+            // Main header
+            // Hard-coded: 4 bpp with flags 0x010101
+            writer.Write(0x20);
+            writer.Write(0x00);     // will set later
+            writer.Write(0x010101);
+            writer.Write((ushort)numGlyphs);
+            writer.Write((ushort)source.CharWidth);
+            writer.Write((ushort)source.CharHeight);
+            writer.Write((ushort)(pixGlyph / 2));
+            writer.Write((ushort)0x01);
+            stream.WriteTimes(0x00, 8);
 
-                // Update codeword
-                codeword >>= 1;
-                codewordSize--;
-
-                // Go to next node
-                ushort nextNodeIdx = BitConverter.ToUInt16(tree, treePosition);
-                treePosition = nextNodeIdx * 6;
-                ushort nextNode = BitConverter.ToUInt16(tree, treePosition);
-
-                // If the next left node is 0, this node is a value
-                if (nextNode == 0) {
-                    // The value is in the right node place
-                    byte val = tree[treePosition + 2];
-                    output[outputPosition++] = (byte)(val & 0xF);
-                    output[outputPosition++] = (byte)(val >> 4);
-
-                    // Reset navigation
-                    treePosition = 0;
-                }
+            // Palette
+            foreach (var color in source.GetPalette()) {
+                writer.Write((byte)color.Red);
+                writer.Write((byte)color.Green);
+                writer.Write((byte)color.Blue);
+                writer.Write((byte)0x00);
             }
+
+            // Variable Width Table (VWT)
+            int vwtSize = numGlyphs * 2;
+            writer.Write(vwtSize);
+            foreach (var glyph in source.Glyphs) {
+                writer.Write((byte)glyph.BearingX);
+                writer.Write((byte)glyph.Advance);
+            }
+
+            // Reserved space
+            stream.WriteTimes(0x00, 4 + (4 * numGlyphs));
+
+            // Glyphs
+            long glyphSection = stream.RelativePosition;
+            stream.WriteTimes(0x00, 0x20);  // header
+
+            // Flatten the glyph bytes
+            var rawData = new byte[numGlyphs * pixGlyph];
+            int rawDataIdx = 0;
+            foreach (var glyph in source.Glyphs) {
+                int[,] glyphImg = glyph.GetImage();
+                for (int h = 0; h < source.CharHeight; h++)
+                    for (int w = 0; w < source.CharWidth; w++)
+                        rawData[rawDataIdx++] = (byte)glyphImg[w, h];
+            }
+
+            // Get Huffman tree
+            byte[] huffmanTree = Huffman.MakeTree(rawData);
+            writer.Write(huffmanTree);
+
+            // Write empty position table
+            long positionTableSection = stream.RelativePosition;
+            stream.WriteTimes(0x00, numGlyphs * 4L);
+
+            var compressed = new DataStream(stream, stream.RelativePosition, 0);
+            int compressedPos = 0;
+            rawDataIdx = 0;
+
+            for (int i = 0; i < numGlyphs; i++) {
+                stream.Seek(positionTableSection + (i * 4L), SeekMode.Origin);
+                writer.Write(compressedPos);
+
+                Huffman.Compress(huffmanTree, rawData, rawDataIdx, compressed, ref compressedPos);
+                rawDataIdx += pixGlyph;
+            }
+
+            // ..Header
+            stream.Seek(glyphSection, SeekMode.Origin);
+            writer.Write(0x20);
+            writer.Write(huffmanTree.Length);
+            writer.Write((uint)compressed.Length);
+            writer.Write(compressedPos);
+            writer.Write(pixGlyph / 2);
+            writer.Write(numGlyphs);
+            writer.Write(numGlyphs * 4);
+            writer.Write(rawData.Length);
+            compressed.Dispose();
+            
+            // Set the unknown field size
+            stream.Seek(0x04, SeekMode.Origin);
+            writer.Write((uint)(stream.Length - vwtSize - 7));
+
+            return new BinaryFormat(stream);
         }
     }
 }

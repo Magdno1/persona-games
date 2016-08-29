@@ -111,7 +111,7 @@ namespace PersonalFont.Fonts
                     Char = (char)System.Convert.ToUInt16(xmlGlyph.Element("CharCode").Value),
                     BearingX = System.Convert.ToInt32(xmlGlyph.Element("BearingX").Value),
                     Width = System.Convert.ToInt32(xmlGlyph.Element("Width").Value),
-                    Advance = System.Convert.ToInt32(xmlGlyph.Element("Advance").Value),
+                    Advance = System.Convert.ToInt32(xmlGlyph.Element("Advance").Value)
                 };
                 glyphs.Add(glyph);
             }
