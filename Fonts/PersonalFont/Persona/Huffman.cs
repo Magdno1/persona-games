@@ -18,6 +18,9 @@
 //
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+using System.Collections.Generic;
+using System.Linq;
+using System.Collections;
 namespace PersonalFont.Persona
 {
     using System;
@@ -77,15 +80,75 @@ namespace PersonalFont.Persona
             }
         }
 
-        public static byte[] MakeTree(byte[] data)
+        public static HuffmanNode MakeTree(byte[] data)
+        {
+            // First get the frequencies and create the leafs
+            var leafs = new Dictionary<byte, HuffmanNode>();
+            foreach (var d in data) {
+                if (!leafs.ContainsKey(d))
+                    leafs.Add(d, new HuffmanNode(d));
+                leafs[d].Frequency++;
+            }
+
+            // Now create the tree
+            var nodes = new SortedSet<HuffmanNode>(leafs.Values, new FrequencyComparer());
+            while (nodes.Count > 1) {
+                // Take the two elements with lower frequency
+                var lowest1 = nodes.Last();
+                nodes.Remove(lowest1);
+
+                var lowest2 = nodes.Last();
+                nodes.Remove(lowest2);
+
+                // Create a new node that contains both of them
+                var parent = new HuffmanNode(0);
+                parent.Frequency = lowest1.Frequency + lowest2.Frequency;
+                parent.LeftLeaf = lowest1;
+                parent.RightLeaf = lowest2;
+
+                // Add the node to the list
+                nodes.Add(parent);
+            }
+
+            return nodes.First();
+        }
+
+        public static int WriteTree(HuffmanNode tree, DataStream stream)
         {
             throw new NotImplementedException();
         }
 
-        public static void Compress(byte[] tree, byte[] data, int dataPosition,
-                DataStream stream, ref int outPosition)
+        public static void Compress(Dictionary<byte, uint> codewords,
+                byte[] data, int dataPosition, int size, DataStream stream, ref int outPosition)
         {
             throw new NotImplementedException();
+        }
+
+        public static Dictionary<byte, uint> GetCodewords(HuffmanNode tree)
+        {
+            var codewords = new Dictionary<byte, uint>();
+            GetCodewordsRecursive(tree, 0, codewords);
+            return codewords;
+        }
+
+        static void GetCodewordsRecursive(HuffmanNode node, uint currentCode,
+                Dictionary<byte, uint> codewords)
+        {
+            if (node.IsLeaf) {
+                node.Codeword = currentCode;
+                codewords.Add(node.Value, currentCode);
+            } else {
+                GetCodewordsRecursive(node.LeftLeaf,  (currentCode << 1) | 0, codewords);
+                GetCodewordsRecursive(node.RightLeaf, (currentCode << 1) | 1, codewords);
+            }
+        }
+
+        class FrequencyComparer : IComparer<HuffmanNode>
+        {
+            public int Compare(HuffmanNode x, HuffmanNode y)
+            {
+                return x.Frequency.CompareTo(y.Frequency);
+            }
         }
     }
 }

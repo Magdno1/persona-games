@@ -163,6 +163,7 @@ namespace PersonalFont.Persona
             writer.Write(0x20);
             writer.Write(0x00);     // will set later
             writer.Write(0x010101);
+            writer.Write((ushort)0x00);
             writer.Write((ushort)numGlyphs);
             writer.Write((ushort)source.CharWidth);
             writer.Write((ushort)source.CharHeight);
@@ -175,7 +176,10 @@ namespace PersonalFont.Persona
                 writer.Write((byte)color.Red);
                 writer.Write((byte)color.Green);
                 writer.Write((byte)color.Blue);
-                writer.Write((byte)0x00);
+                if (color.Red > 0 && color.Green > 0 && color.Blue > 0)
+                    writer.Write((byte)0x80);
+                else
+                    writer.Write((byte)0x00);
             }
 
             // Variable Width Table (VWT)
@@ -194,18 +198,25 @@ namespace PersonalFont.Persona
             stream.WriteTimes(0x00, 0x20);  // header
 
             // Flatten the glyph bytes
-            var rawData = new byte[numGlyphs * pixGlyph];
+            var rawData = new byte[numGlyphs * pixGlyph / 2];
             int rawDataIdx = 0;
             foreach (var glyph in source.Glyphs) {
                 int[,] glyphImg = glyph.GetImage();
-                for (int h = 0; h < source.CharHeight; h++)
-                    for (int w = 0; w < source.CharWidth; w++)
-                        rawData[rawDataIdx++] = (byte)glyphImg[w, h];
+                for (int h = 0; h < source.CharHeight; h++) {
+                    for (int w = 0; w < source.CharWidth; w++) {
+                        if (rawDataIdx % 2 == 0)
+                            rawData[rawDataIdx / 2] = (byte)glyphImg[w, h];
+                        else
+                            rawData[rawDataIdx / 2] |= (byte)(glyphImg[w, h] << 4);
+                        rawDataIdx++;
+                    }
+                }
             }
 
             // Get Huffman tree
-            byte[] huffmanTree = Huffman.MakeTree(rawData);
-            writer.Write(huffmanTree);
+            HuffmanNode huffmanTree = Huffman.MakeTree(rawData);
+            int huffmanTreeSize = Huffman.WriteTree(huffmanTree, stream);
+            var codewords = Huffman.GetCodewords(huffmanTree);
 
             // Write empty position table
             long positionTableSection = stream.RelativePosition;
@@ -219,19 +230,19 @@ namespace PersonalFont.Persona
                 stream.Seek(positionTableSection + (i * 4L), SeekMode.Origin);
                 writer.Write(compressedPos);
 
-                Huffman.Compress(huffmanTree, rawData, rawDataIdx, compressed, ref compressedPos);
+                Huffman.Compress(codewords, rawData, rawDataIdx, pixGlyph, compressed, ref compressedPos);
                 rawDataIdx += pixGlyph;
             }
 
             // ..Header
             stream.Seek(glyphSection, SeekMode.Origin);
             writer.Write(0x20);
-            writer.Write(huffmanTree.Length);
+            writer.Write(huffmanTreeSize);
             writer.Write((uint)compressed.Length);
             writer.Write(compressedPos);
             writer.Write(pixGlyph / 2);
-            writer.Write(numGlyphs);
-            writer.Write(numGlyphs * 4);
+            writer.Write(numGlyphs + 1);
+            writer.Write((numGlyphs + 1) * 4);
             writer.Write(rawData.Length);
             compressed.Dispose();
             
